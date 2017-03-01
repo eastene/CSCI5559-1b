@@ -172,6 +172,6 @@ CREATE TABLE Items (
 		REFERENCES MenuItem(code)
 );
 
-# Grant PHP access to the database using the new user dba@localhost
+# Grant PHP access to the database using the new user dbApp@localhost
 CREATE USER 'dbApp'@'localhost' IDENTIFIED BY 'dbAppPassword';
 GRANT ALL ON dba.* TO 'dbApp'@'localhost';

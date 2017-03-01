@@ -273,15 +273,23 @@ switch ($QUERY_ID) {
 		//DISPLAY QUERY Title and Description.
 		echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>
 				<tr class='bckMngr'><th class='bckMngr'>Query 5: A3.</th></tr>
-				<tr class='bckMngr'><td class='bckMngr'>All employees who live in zip codes 80013, 80014, and 80017, including name, address,
+				<tr class='bckMngr'><td class='bckMngr'>All employees who live in zip code 80013, 80014, or 80017, including name, address,
 					zip code, SSN and the role they play in the organization (waiter, cashier, kitchen position, etc.).</td></tr>
 			  </table><br>";
 
 		try { /*Protect execution errors capturing exceptions.*/
 			//Query to run
-			$queryText = "SELECT name, address, zipCode, SSN, position
-				FROM dba.Employee E
-				WHERE E.zipCode=80013 OR E.zipCode=80014 OR E.zipCode=80017" ;
+			$queryText = "SELECT name, address, zipCode, SSN, 'Waiter' AS Role
+				FROM dba.Employee E, dba.Waiter W
+				WHERE (E.zipCode=80013 OR E.zipCode=80014 OR E.zipCode=80017) AND E.empID=W.empId
+				UNION
+				SELECT name, address, zipCode, SSN, 'Cashier' AS Role
+				FROM dba.Employee E, dba.Cashier C
+				WHERE (E.zipCode=80013 OR E.zipCode=80014 OR E.zipCode=80017) AND E.empID=C.empId
+				UNION
+				SELECT name, address, zipCode, SSN, position
+				FROM dba.Employee E, dba.KitchenStaff K
+				WHERE (E.zipCode=80013 OR E.zipCode=80014 OR E.zipCode=80017) AND E.empID=K.empId";
 			
 			//Prepare the query. 
 			$resultSet = $mysql->prepare($queryText);  
@@ -294,8 +302,11 @@ switch ($QUERY_ID) {
 			
 			echo '<thead>' ;														//HTML Header - Columns headers
 			echo 	'<tr class="bckMngr">';
-			echo 	'<th class="bckMngr" style="width:150px;">Position</th>';		 
-			echo 	'<th class="bckMngr" style="width:260px;">Count</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Name</th>';		 
+			echo 	'<th class="bckMngr" style="width:260px;">Address</th>';
+			echo    '<th class="bckMngr" style="width:150px;">Zip Code</th>';
+			echo    '<th class="bckMngr" style="width:150px;">SSN</th>';
+			echo    '<th class="bckMngr" style="width:150px;">Role</th>';
 			echo '</thead>';
 
 
@@ -303,8 +314,11 @@ switch ($QUERY_ID) {
 			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
 				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
 				echo '<tr '.$tr_class.'>';
-					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['position'].'</td>';
-					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['count'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['name'].'</td>';
+					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['address'].'</td>';
+					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['zipCode'].'</td>';
+					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['SSN'].'</td>';
+					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['Role'].'</td>';
 				echo '</tr>';
 			}
 			echo "</tbody>";
@@ -362,6 +376,168 @@ switch ($QUERY_ID) {
 					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['rd'].'</td>';
 					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['rt'].'</td>';
 					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['arrivalTime'].'</td>';
+				echo '</tr>';
+			}
+			echo "</tbody>";
+			echo "</table>";
+
+		}
+		catch (PDOException $e){
+			reportErrorAndDie($e->getCode(), "SQL Exception:". $e->getMessage() );
+		}	
+	break;
+
+	case 7:  /*Query 7: A5.*/
+		$tr_id=0; $tr_class='class="bckMngrtrOdd"';  //Used to display rows background color.
+
+		//DISPLAY QUERY Title and Description.
+		echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>
+				<tr class='bckMngr'><th class='bckMngr'>Query 7: A5.</th></tr>
+				<tr class='bckMngr'><td class='bckMngr'>Customer information for those who made reservations and arrived less than 10 minutes 
+					before their reservation expired (no duplicate customer info).</td></tr>
+			  </table><br>";
+
+		try { /*Protect execution errors capturing exceptions.*/
+			//Query to run
+			$queryText = "SELECT DISTINCT Customer.name, Customer.phone
+				FROM dba.Reservation, dba.Customer
+				WHERE Reservation.phone=Customer.phone 
+					AND Reservation.arrivalTime>TIME(DATE_ADD(Reservation.reservationDateTime, INTERVAL -10 MINUTE))
+					AND Reservation.arrivalTime<TIME(Reservation.reservationDateTime);";
+			
+			//Prepare the query. 
+			$resultSet = $mysql->prepare($queryText);  
+			
+			/*Execute the query. Params are passed in order as they appear in the query text "?" */
+			$resultSet->execute(array());
+		
+			/*** DISPLAY RESULT DATA  -- We will not consider any problem of table shifting because of data size.  *****/
+			echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>";	//Try this: May change the whole table size.
+			
+			echo '<thead>' ;														//HTML Header - Columns headers
+			echo 	'<tr class="bckMngr">';
+			echo 	'<th class="bckMngr" style="width:150px;">Name</th>';		 
+			echo 	'<th class="bckMngr" style="width:260px;">Phone Number</th>';
+			echo '</thead>';
+
+
+			echo "<tbody>";
+			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
+				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
+				echo '<tr '.$tr_class.'>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['name'].'</td>';
+					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['phone'].'</td>';
+				echo '</tr>';
+			}
+			echo "</tbody>";
+			echo "</table>";
+
+		}
+		catch (PDOException $e){
+			reportErrorAndDie($e->getCode(), "SQL Exception:". $e->getMessage() );
+		}	
+	break;
+
+	case 8:  /*Query 8: A6.*/
+		$tr_id=0; $tr_class='class="bckMngrtrOdd"';  //Used to display rows background color.
+
+		//DISPLAY QUERY Title and Description.
+		echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>
+				<tr class='bckMngr'><th class='bckMngr'>Query 8: A6.</th></tr>
+				<tr class='bckMngr'><td class='bckMngr'>Menu items that are never ordered</td></tr>
+			  </table><br>";
+
+		try { /*Protect execution errors capturing exceptions.*/
+			//Query to run
+			$queryText = "SELECT description, price
+				FROM dba.MenuItem
+				WHERE NOT EXISTS (SELECT code
+					FROM dba.Items
+				 	WHERE MenuItem.code=Items.code);";
+			
+			//Prepare the query. 
+			$resultSet = $mysql->prepare($queryText);  
+			
+			/*Execute the query. Params are passed in order as they appear in the query text "?" */
+			$resultSet->execute(array());
+		
+			/*** DISPLAY RESULT DATA  -- We will not consider any problem of table shifting because of data size.  *****/
+			echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>";	//Try this: May change the whole table size.
+			
+			echo '<thead>' ;														//HTML Header - Columns headers
+			echo 	'<tr class="bckMngr">';
+			echo 	'<th class="bckMngr" style="width:150px;">Description</th>';		 
+			echo 	'<th class="bckMngr" style="width:260px;">Price</th>';
+			echo '</thead>';
+
+
+			echo "<tbody>";
+			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
+				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
+				echo '<tr '.$tr_class.'>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['description'].'</td>';
+					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['price'].'</td>';
+				echo '</tr>';
+			}
+			echo "</tbody>";
+			echo "</table>";
+
+		}
+		catch (PDOException $e){
+			reportErrorAndDie($e->getCode(), "SQL Exception:". $e->getMessage() );
+		}	
+	break;
+
+	case 9:  /*Query 9: A7.*/
+		$tr_id=0; $tr_class='class="bckMngrtrOdd"';  //Used to display rows background color.
+
+		//DISPLAY QUERY Title and Description.
+		echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>
+				<tr class='bckMngr'><th class='bckMngr'>Query 9: A7.</th></tr>
+				<tr class='bckMngr'><td class='bckMngr'>All invoices generated in the last 15 days</td></tr>
+			  </table><br>";
+
+		try { /*Protect execution errors capturing exceptions.*/
+			//Query to run
+			$queryText = "SELECT invNumber, DATE(invoiceDateTime) AS indt, name, SUM()
+				FROM dba.Invoice
+				WHERE Invoice.invoiceDateTime>DATE_ADD(NOW(), INTERVAL -15 DAY)
+				AND Invoice.invoiceDateTime<NOW()
+				INTERSECT
+				SELECT name
+				FROM dba.Employee E
+				WHERE E.empId=(SELECT DO.empId
+					FROM dba.Invoice, dba.DailyOperation DO
+					WHERE DO.brand=Invoice.brand
+					AND DO.model=Invoice.model
+					AND DO.serialNo=Invoice.serialNo);";
+			
+			//Prepare the query. 
+			$resultSet = $mysql->prepare($queryText);  
+			
+			/*Execute the query. Params are passed in order as they appear in the query text "?" */
+			$resultSet->execute(array());
+		
+			/*** DISPLAY RESULT DATA  -- We will not consider any problem of table shifting because of data size.  *****/
+			echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>";	//Try this: May change the whole table size.
+			
+			echo '<thead>' ;														//HTML Header - Columns headers
+			echo 	'<tr class="bckMngr">';
+			echo 	'<th class="bckMngr" style="width:150px;">Invoice Number</th>';		 
+			echo 	'<th class="bckMngr" style="width:150px;">Date</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Cashier</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Subtotal</th>';
+			echo '</thead>';
+
+
+			echo "<tbody>";
+			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
+				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
+				echo '<tr '.$tr_class.'>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['invNumber'].'</td>';
+					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['indt'].'</td>';
+					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['name'].'</td>';
+					//echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['price'].'</td>';
 				echo '</tr>';
 			}
 			echo "</tbody>";
