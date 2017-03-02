@@ -549,6 +549,110 @@ switch ($QUERY_ID) {
 		}	
 	break;
 
+	case 10:  /*Query 10: A8.*/
+		$tr_id=0; $tr_class='class="bckMngrtrOdd"';  //Used to display rows background color.
+
+		//DISPLAY QUERY Title and Description.
+		echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>
+				<tr class='bckMngr'><th class='bckMngr'>Query 10: A8.</th></tr>
+				<tr class='bckMngr'><td class='bckMngr'>For the last five days, the daily balance for each terminal</td></tr>
+			  </table><br>";
+
+		try { /*Protect execution errors capturing exceptions.*/
+			//Query to run
+			$queryText = "SELECT (openAmt - closeAmt) AS diff
+				FROM dba.Terminal, 
+				temp1 = (
+					SELECT cash AS openAmt
+					FROM dba.DailyOperation
+					WHERE operation = 'O'
+					AND operDate > DATE_ADD(NOW(), INTERVAL -5 DAY)),
+				temp2 = (
+					SELECT cash AS closeAmt
+					FROM dba.DailyOperation
+					WHERE operation = 'C'
+					AND operDate > DATE_ADD(NOW(), INTERVAL -5 DAY));";
+				
+			//Prepare the query. 
+			$resultSet = $mysql->prepare($queryText);  
+			
+			/*Execute the query. Params are passed in order as they appear in the query text "?" */
+			$resultSet->execute(array());
+		
+			/*** DISPLAY RESULT DATA  -- We will not consider any problem of table shifting because of data size.  *****/
+			echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>";	//Try this: May change the whole table size.
+			
+			echo '<thead>' ;														//HTML Header - Columns headers
+			echo 	'<tr class="bckMngr">';
+			echo 	'<th class="bckMngr" style="width:150px;">Balance</th>';
+			echo '</thead>';
+
+
+			echo "<tbody>";
+			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
+				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
+				echo '<tr '.$tr_class.'>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['diff'].'</td>';
+				echo '</tr>';
+			}
+			echo "</tbody>";
+			echo "</table>";
+
+		}
+		catch (PDOException $e){
+			reportErrorAndDie($e->getCode(), "SQL Exception:". $e->getMessage() );
+		}	
+	break;
+
+case 11:  /*Query 11: A9.*/
+		$tr_id=0; $tr_class='class="bckMngrtrOdd"';  //Used to display rows background color.
+
+		//DISPLAY QUERY Title and Description.
+		echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>
+				<tr class='bckMngr'><th class='bckMngr'>Query 11: A9.</th></tr>
+				<tr class='bckMngr'><td class='bckMngr'>Waiters that have not helped anyone all day over the past 3 days.</td></tr>
+			  </table><br>";
+
+		try { /*Protect execution errors capturing exceptions.*/
+			//Query to run
+			$queryText = "SELECT name
+				FROM dba.Waiter
+				WHERE NOT EXIST empID = (SELECT waiter
+					FROM dba.Invoice I, dba.DinnerTable DT
+					WHERE I.address = DT.address
+					AND I.tableNumber = DT.tableNumber
+					AND I.invoiceDateTime < DATE_ADD(NOW(), INTERVAL -3 DAY));";
+				
+			//Prepare the query. 
+			$resultSet = $mysql->prepare($queryText);  
+			
+			/*Execute the query. Params are passed in order as they appear in the query text "?" */
+			$resultSet->execute(array());
+		
+			/*** DISPLAY RESULT DATA  -- We will not consider any problem of table shifting because of data size.  *****/
+			echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>";	//Try this: May change the whole table size.
+			
+			echo '<thead>' ;														//HTML Header - Columns headers
+			echo 	'<tr class="bckMngr">';
+			echo 	'<th class="bckMngr" style="width:150px;">Balance</th>';
+			echo '</thead>';
+
+
+			echo "<tbody>";
+			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
+				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
+				echo '<tr '.$tr_class.'>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['diff'].'</td>';
+				echo '</tr>';
+			}
+			echo "</tbody>";
+			echo "</table>";
+
+		}
+		catch (PDOException $e){
+			reportErrorAndDie($e->getCode(), "SQL Exception:". $e->getMessage() );
+		}	
+	break;
 	/***************************************************************************************************************************************************/
 	default: /*No valid query or query not implemented yet.*/
 		echo '
