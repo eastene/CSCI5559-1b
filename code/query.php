@@ -499,18 +499,14 @@ switch ($QUERY_ID) {
 
 		try { /*Protect execution errors capturing exceptions.*/
 			//Query to run
-			$queryText = "SELECT invNumber, DATE(invoiceDateTime) AS indt, name, SUM()
-				FROM dba.Invoice
+			$queryText = "SELECT invNumber, DATE(invoiceDateTime) AS indt, name, sum
+				FROM dba.Invoice, dba.Employee E, dba.DailyOperation OP
 				WHERE Invoice.invoiceDateTime>DATE_ADD(NOW(), INTERVAL -15 DAY)
-				AND Invoice.invoiceDateTime<NOW()
-				INTERSECT
-				SELECT name
-				FROM dba.Employee E
-				WHERE E.empId=(SELECT DO.empId
-					FROM dba.Invoice, dba.DailyOperation DO
-					WHERE DO.brand=Invoice.brand
-					AND DO.model=Invoice.model
-					AND DO.serialNo=Invoice.serialNo);";
+				AND E.empId=(SELECT OP.empId
+					FROM dba.Invoice, dba.DailyOperation OP
+					WHERE OP.brand=Invoice.brand
+					AND OP.model=Invoice.model
+					AND OP.serialNo=Invoice.serialNo);";
 			
 			//Prepare the query. 
 			$resultSet = $mysql->prepare($queryText);  

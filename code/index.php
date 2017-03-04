@@ -70,9 +70,9 @@ Author:
 					 
 				</tr>
 				<tr class="dbaserver">
-					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="yourphp.php?option=5">DM-B1</a></td>
-					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="yourphp.php?option=6">DM-B2</a></td>
-					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="yourphp.php?option=7">DM-B3</a></td>
+					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="dataManipulation.php?option=5">DM-B1</a></td>
+					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="dataManipulation.php?option=6">DM-B2</a></td>
+					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="dataManipulation.php?option=7">DM-B3</a></td>
 			 
 				</tr> 
 			</table>
