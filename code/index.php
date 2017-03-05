@@ -51,11 +51,11 @@ Author:
 					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="query.php?queryId=9">DataQuery A7</a></td>
 					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="query.php?queryId=10">DataQuery A8</a></td>
 					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="query.php?queryId=11">DataQuery A9</a></td>
-					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="query.php?queryId=11">DataQuery A10</a></td>
+					<td colspan = "1" style="width:300px;text-align:center;"><a class='dbaserver' href="query.php?queryId=12">DataQuery A10</a></td>
 				</tr>
 				<tr class="dbaserver">
-					<td colspan = "2" style="width:300px;text-align:center;"><a class='dbaserver' href="query.php?queryId=9">DataQuery A11</a></td>
-					<td colspan = "2" style="width:300px;text-align:center;"><a class='dbaserver' href="query.php?queryId=10">DataQuery A12</a></td>
+					<td colspan = "2" style="width:300px;text-align:center;"><a class='dbaserver' href="query.php?queryId=13">DataQuery A11</a></td>
+					<td colspan = "2" style="width:300px;text-align:center;"><a class='dbaserver' href="query.php?queryId=14">DataQuery A12</a></td>
 				</tr>
 			</table>
 		</td></tr>

@@ -501,7 +501,7 @@ switch ($QUERY_ID) {
 			//Query to run
 			$queryText = "SELECT Invoice.invNumber, DATE(invoiceDateTime) AS indt, name, SUM(price * It.qty) as subt
 				FROM dba.Invoice, dba.Employee E, dba.MenuItem MI, dba.Items It
-				WHERE Invoice.invoiceDateTime>DATE_ADD(NOW(), INTERVAL -50 DAY)
+				WHERE Invoice.invoiceDateTime>DATE_ADD(NOW(), INTERVAL -15 DAY)
 				AND E.empId IN (SELECT OP.empId
 					FROM dba.DailyOperation OP
 					WHERE OP.brand=Invoice.brand
@@ -559,18 +559,22 @@ switch ($QUERY_ID) {
 
 		try { /*Protect execution errors capturing exceptions.*/
 			//Query to run
-			$queryText = "SELECT (openAmt - closeAmt) AS diff
-				FROM dba.Terminal, 
-				temp1 = (
-					SELECT cash AS openAmt
-					FROM dba.DailyOperation
-					WHERE operation = 'O'
-					AND operDate > DATE_ADD(NOW(), INTERVAL -5 DAY)),
-				temp2 = (
-					SELECT cash AS closeAmt
-					FROM dba.DailyOperation
-					WHERE operation = 'C'
-					AND operDate > DATE_ADD(NOW(), INTERVAL -5 DAY));";
+			$queryText = "SELECT Terminal.brand, Terminal.model, Terminal.serialNo, (openAmt - closeAmt) AS diff, temp1.operDate
+				FROM dba.Terminal, (SELECT cash AS openAmt, brand, model, serialNo, operDate
+					FROM dba.DailyOperation OP
+					WHERE OP.operation = 'O'
+					AND OP.operDate > DATE_ADD(NOW(), INTERVAL -5 DAY)) AS temp1,
+				(SELECT cash AS closeAmt, brand, model, serialNo, operDate
+					FROM dba.DailyOperation OP
+					WHERE OP.operation = 'C'
+					AND OP.operDate > DATE_ADD(NOW(), INTERVAL -5 DAY)) AS temp2
+				WHERE temp1.brand=Terminal.brand
+					AND temp1.model=Terminal.model
+					AND temp1.serialNo=Terminal.serialNo
+					AND temp2.brand=Terminal.brand
+					AND temp2.model=Terminal.model
+					AND temp2.serialNo=Terminal.serialNo
+					AND temp1.operDate=temp2.operDate;";
 				
 			//Prepare the query. 
 			$resultSet = $mysql->prepare($queryText);  
@@ -583,7 +587,11 @@ switch ($QUERY_ID) {
 			
 			echo '<thead>' ;														//HTML Header - Columns headers
 			echo 	'<tr class="bckMngr">';
+			echo 	'<th class="bckMngr" style="width:150px;">Model</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Brand</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Serial No</th>';
 			echo 	'<th class="bckMngr" style="width:150px;">Balance</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Date</th>';
 			echo '</thead>';
 
 
@@ -591,7 +599,11 @@ switch ($QUERY_ID) {
 			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
 				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
 				echo '<tr '.$tr_class.'>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['model'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['brand'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['serialNo'].'</td>';
 					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['diff'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['operDate'].'</td>';
 				echo '</tr>';
 			}
 			echo "</tbody>";
@@ -668,13 +680,20 @@ case 11:  /*Query 11: A9.*/
 
 		try { /*Protect execution errors capturing exceptions.*/
 			//Query to run
-			$queryText = "SELECT *
-				FROM dba.Employee E
-				WHERE empID = (SELECT M.phone
+			$queryText = "SELECT DISTINCT *
+				FROM dba.Employee E, (SELECT R.phone
 					FROM dba.Waiter W, dba.Reservation R, dba.DinnerTable DT
 					WHERE R.address = DT.address
 					AND R.tableNumber = DT.tableNumber
-					AND DT.waiter=1);";
+					AND DT.waiter=1) AS temp1,
+					(SELECT R.phone, DT.waiter
+					FROM dba.Reservation R, dba.DinnerTable DT
+					WHERE R.address = DT.address
+					AND R.tableNumber = DT.tableNumber) AS temp2
+				WHERE E.empID IN (SELECT manager
+					FROM dba.Waiter
+					WHERE temp1.phone = temp2.phone
+					AND temp2.waiter=Waiter.empId);";
 				
 			//Prepare the query. 
 			$resultSet = $mysql->prepare($queryText);  
@@ -687,7 +706,7 @@ case 11:  /*Query 11: A9.*/
 			
 			echo '<thead>' ;														//HTML Header - Columns headers
 			echo 	'<tr class="bckMngr">';
-			echo 	'<th class="bckMngr" style="width:150px;">Balance</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Name</th>';
 			echo '</thead>';
 
 
@@ -695,7 +714,7 @@ case 11:  /*Query 11: A9.*/
 			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
 				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
 				echo '<tr '.$tr_class.'>';
-					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['diff'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['name'].'</td>';
 				echo '</tr>';
 			}
 			echo "</tbody>";
