@@ -499,14 +499,17 @@ switch ($QUERY_ID) {
 
 		try { /*Protect execution errors capturing exceptions.*/
 			//Query to run
-			$queryText = "SELECT invNumber, DATE(invoiceDateTime) AS indt, name, sum
-				FROM dba.Invoice, dba.Employee E, dba.DailyOperation OP
-				WHERE Invoice.invoiceDateTime>DATE_ADD(NOW(), INTERVAL -15 DAY)
-				AND E.empId=(SELECT OP.empId
-					FROM dba.Invoice, dba.DailyOperation OP
+			$queryText = "SELECT Invoice.invNumber, DATE(invoiceDateTime) AS indt, name, SUM(price * It.qty) as subt
+				FROM dba.Invoice, dba.Employee E, dba.MenuItem MI, dba.Items It
+				WHERE Invoice.invoiceDateTime>DATE_ADD(NOW(), INTERVAL -50 DAY)
+				AND E.empId IN (SELECT OP.empId
+					FROM dba.DailyOperation OP
 					WHERE OP.brand=Invoice.brand
 					AND OP.model=Invoice.model
-					AND OP.serialNo=Invoice.serialNo);";
+					AND OP.serialNo=Invoice.serialNo)
+				AND It.invNumber=Invoice.invNumber
+				AND MI.code=It.code
+				GROUP BY invNumber, indt, name;";
 			
 			//Prepare the query. 
 			$resultSet = $mysql->prepare($queryText);  
@@ -533,7 +536,7 @@ switch ($QUERY_ID) {
 					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['invNumber'].'</td>';
 					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['indt'].'</td>';
 					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['name'].'</td>';
-					//echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['price'].'</td>';
+					echo '<td class="bckMngr" style="text-align:center;width:150px;">'.$row['subt'].'</td>';
 				echo '</tr>';
 			}
 			echo "</tbody>";
@@ -601,6 +604,110 @@ switch ($QUERY_ID) {
 	break;
 
 case 11:  /*Query 11: A9.*/
+		$tr_id=0; $tr_class='class="bckMngrtrOdd"';  //Used to display rows background color.
+
+		//DISPLAY QUERY Title and Description.
+		echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>
+				<tr class='bckMngr'><th class='bckMngr'>Query 11: A9.</th></tr>
+				<tr class='bckMngr'><td class='bckMngr'>Waiters that have not helped anyone all day over the past 3 days.</td></tr>
+			  </table><br>";
+
+		try { /*Protect execution errors capturing exceptions.*/
+			//Query to run
+			$queryText = "SELECT name, SSN, workisInAddress
+				FROM dba.Waiter, dba.Employee
+				WHERE Waiter.empID IN (SELECT DT.waiter
+					FROM dba.Invoice I, dba.DinnerTable DT
+					WHERE I.address = DT.address
+					AND I.tableNumber = DT.tableNumber
+					AND I.invoiceDateTime > DATE_ADD(NOW(), INTERVAL -3 DAY));";
+				
+			//Prepare the query. 
+			$resultSet = $mysql->prepare($queryText);  
+			
+			/*Execute the query. Params are passed in order as they appear in the query text "?" */
+			$resultSet->execute(array());
+		
+			/*** DISPLAY RESULT DATA  -- We will not consider any problem of table shifting because of data size.  *****/
+			echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>";	//Try this: May change the whole table size.
+			
+			echo '<thead>' ;														//HTML Header - Columns headers
+			echo 	'<tr class="bckMngr">';
+			echo 	'<th class="bckMngr" style="width:150px;">Name</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">SSN</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Address</th>';
+			echo '</thead>';
+
+
+			echo "<tbody>";
+			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
+				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
+				echo '<tr '.$tr_class.'>';
+				echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['diff']." (".$row['id'].")".'</td>';
+				echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['workisInAddress'].'</td>';
+				echo '</tr>';
+			}
+			echo "</tbody>";
+			echo "</table>";
+
+		}
+		catch (PDOException $e){
+			reportErrorAndDie($e->getCode(), "SQL Exception:". $e->getMessage() );
+		}	
+	break;
+
+	case 12:  /*Query 12: A10.*/
+		$tr_id=0; $tr_class='class="bckMngrtrOdd"';  //Used to display rows background color.
+
+		//DISPLAY QUERY Title and Description.
+		echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>
+				<tr class='bckMngr'><th class='bckMngr'>Query 12: A10.</th></tr>
+				<tr class='bckMngr'><td class='bckMngr'>The information of the manager for the waiters that have helped
+				some of the customers that were helped at least once by the waiter ‘John Smith’.</td></tr>
+			  </table><br>";
+
+		try { /*Protect execution errors capturing exceptions.*/
+			//Query to run
+			$queryText = "SELECT *
+				FROM dba.Employee E
+				WHERE empID = (SELECT M.phone
+					FROM dba.Waiter W, dba.Reservation R, dba.DinnerTable DT
+					WHERE R.address = DT.address
+					AND R.tableNumber = DT.tableNumber
+					AND DT.waiter=1);";
+				
+			//Prepare the query. 
+			$resultSet = $mysql->prepare($queryText);  
+			
+			/*Execute the query. Params are passed in order as they appear in the query text "?" */
+			$resultSet->execute(array());
+		
+			/*** DISPLAY RESULT DATA  -- We will not consider any problem of table shifting because of data size.  *****/
+			echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>";	//Try this: May change the whole table size.
+			
+			echo '<thead>' ;														//HTML Header - Columns headers
+			echo 	'<tr class="bckMngr">';
+			echo 	'<th class="bckMngr" style="width:150px;">Balance</th>';
+			echo '</thead>';
+
+
+			echo "<tbody>";
+			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
+				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
+				echo '<tr '.$tr_class.'>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['diff'].'</td>';
+				echo '</tr>';
+			}
+			echo "</tbody>";
+			echo "</table>";
+
+		}
+		catch (PDOException $e){
+			reportErrorAndDie($e->getCode(), "SQL Exception:". $e->getMessage() );
+		}	
+	break;
+
+	case 11:  /*Query 11: A9.*/
 		$tr_id=0; $tr_class='class="bckMngrtrOdd"';  //Used to display rows background color.
 
 		//DISPLAY QUERY Title and Description.

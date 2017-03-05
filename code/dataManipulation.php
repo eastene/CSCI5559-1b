@@ -316,7 +316,7 @@ switch ($OPTION_ID) {
 				$vArgs["price"] = $_POST["price"];			$vArgs["percent"] = $_POST["percent"];
 				try{
 					$stmt=null;
-					$incr = floatval($vArgs["percent"]) + 1;
+					$incr = (floatval($vArgs["percent"])/100) + 1;
 					$qry ="UPDATE dba.MenuItem SET price=(?*'$incr') WHERE price<?;";
 					$stmt= $mysql->prepare($qry);
 
