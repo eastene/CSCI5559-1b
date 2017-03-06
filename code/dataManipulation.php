@@ -1,7 +1,7 @@
 <?php 
 /*************************************************
 Description:
-	This file resolves Data Manipulation for section B.
+	This file implements Data Manipulation for section B.
 Author:
 	Evan Stene
     830387196

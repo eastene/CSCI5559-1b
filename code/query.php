@@ -726,24 +726,100 @@ case 11:  /*Query 11: A9.*/
 		}	
 	break;
 
-	case 11:  /*Query 11: A9.*/
+	case 13:  /*Query 13: A11.*/
 		$tr_id=0; $tr_class='class="bckMngrtrOdd"';  //Used to display rows background color.
 
 		//DISPLAY QUERY Title and Description.
 		echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>
-				<tr class='bckMngr'><th class='bckMngr'>Query 11: A9.</th></tr>
-				<tr class='bckMngr'><td class='bckMngr'>Waiters that have not helped anyone all day over the past 3 days.</td></tr>
+				<tr class='bckMngr'><th class='bckMngr'>Query 13: A11.</th></tr>
+				<tr class='bckMngr'><td class='bckMngr'>Customers who have made 5 or more reservations in the past 6 months and 
+				a gift value corresponding to the amount they have spent in the past month</td></tr>
 			  </table><br>";
 
 		try { /*Protect execution errors capturing exceptions.*/
 			//Query to run
-			$queryText = "SELECT name
-				FROM dba.Waiter
-				WHERE NOT EXIST empID = (SELECT waiter
-					FROM dba.Invoice I, dba.DinnerTable DT
-					WHERE I.address = DT.address
-					AND I.tableNumber = DT.tableNumber
-					AND I.invoiceDateTime < DATE_ADD(NOW(), INTERVAL -3 DAY));";
+			$queryText = "SELECT name, phone, spent, '20' AS gift
+				FROM dba.Customer C
+				WHERE 4 < (SELECT COUNT(phone)
+					FROM dba.Reservation R
+					WHERE R.address = '1380 Lawrence St'
+					AND R.reservationDateTime > DATE_ADD(NOW(), INTERVAL -6 MONTH))
+				AND 300 > (SELECT SUM(price) as spent
+					FROM dba.MenuItems MI, dba.Items, dba.Invoice I
+					WHERE I.customerPhone = phone
+					AND Items.invNumber = I.invNumber
+					AND Items.code = MI.code)
+				UNION
+				SELECT name, phone, spent, '50' AS gift
+				FROM dba.Customer C
+				WHERE 4 < (SELECT COUNT(phone)
+					FROM dba.Reservation R
+					WHERE R.address = '1380 Lawrence St'
+					AND R.reservationDateTime > DATE_ADD(NOW(), INTERVAL -6 MONTH))
+				AND 500 > (SELECT SUM(price) as spent
+					FROM dba.MenuItems MI, dba.Items, dba.Invoice I
+					WHERE I.customerPhone = phone
+					AND Items.invNumber = I.invNumber
+					AND Items.code = MI.code)
+				UNION
+				SELECT name, phone, spent, '100' AS gift
+				FROM dba.Customer C
+				WHERE 4 < (SELECT COUNT(phone)
+					FROM dba.Reservation R
+					WHERE R.address = '1380 Lawrence St'
+					AND R.reservationDateTime > DATE_ADD(NOW(), INTERVAL -6 MONTH))
+				AND 500 < (SELECT SUM(price) as spent
+					FROM dba.MenuItems MI, dba.Items, dba.Invoice I
+					WHERE I.customerPhone = phone
+					AND Items.invNumber = I.invNumber
+					AND Items.code = MI.code);";
+				
+			//Prepare the query. 
+			$resultSet = $mysql->prepare($queryText);  
+			
+			/*Execute the query. Params are passed in order as they appear in the query text "?" */
+			$resultSet->execute(array());
+		
+			/*** DISPLAY RESULT DATA  -- We will not consider any problem of table shifting because of data size.  *****/
+			echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>";	//Try this: May change the whole table size.
+			
+			echo '<thead>' ;														//HTML Header - Columns headers
+			echo 	'<tr class="bckMngr">';
+			echo 	'<th class="bckMngr" style="width:150px;">Balance</th>';
+			echo '</thead>';
+
+
+			echo "<tbody>";
+			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
+				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
+				echo '<tr '.$tr_class.'>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['diff'].'</td>';
+				echo '</tr>';
+			}
+			echo "</tbody>";
+			echo "</table>";
+
+		}
+		catch (PDOException $e){
+			reportErrorAndDie($e->getCode(), "SQL Exception:". $e->getMessage() );
+		}	
+	break;
+
+	case 14:  /*Query 14: A12.*/
+		$tr_id=0; $tr_class='class="bckMngrtrOdd"';  //Used to display rows background color.
+
+		//DISPLAY QUERY Title and Description.
+		echo "<table  style='margin: auto;width:750px;' class='disponibilidad'>
+				<tr class='bckMngr'><th class='bckMngr'>Query 14: A12.</th></tr>
+				<tr class='bckMngr'><td class='bckMngr'>Customers who have made 5 or more reservations in the past 6 months and 
+				a gift value corresponding to the amount they have spent in the past month</td></tr>
+			  </table><br>";
+
+		try { /*Protect execution errors capturing exceptions.*/
+			//Query to run
+			$queryText = "SELECT waiter, tableNumber, reservationId, reservationDateTime, name, phone
+				FROM dba.DinnerTable DT, dba.Reservation R, dba.Customer C
+				";
 				
 			//Prepare the query. 
 			$resultSet = $mysql->prepare($queryText);  
