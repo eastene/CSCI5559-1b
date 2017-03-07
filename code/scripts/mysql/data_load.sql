@@ -2,8 +2,8 @@
 # 830387196
 
 INSERT INTO Restaurant (address, city, zipCode, phone)
-    VALUES ('1380 Larimer St', 'Denver', 80202, '303-555-5552'),
-        ('1380 Lawrence St', 'Denver', 80202, '303-555-5551');
+    VALUES ('1380 Larimer St', 'Denver', 80204, '303-555-5552'),
+        ('1380 Lawrence St', 'Denver', 80204, '303-555-5551');
 
 INSERT INTO Employee (empId, name, address, zipCode, DoB, phone, dateOfJoin, SSN, workisInAddress)
     VALUES (1, 'John Smith', '1230 1st Street', 80202, '1990-04-05', '303-555-5001', '2010-05-02', '123-04-1234', '1380 Lawrence St'),

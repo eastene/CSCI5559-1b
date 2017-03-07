@@ -118,37 +118,14 @@ switch ($OPTION_ID) {
 
 				try{
 					// check if customer exists in db already
- 					/*$phone = mysql_real_escape_string($vArgs["phone"]);
-					$result = mysql_query("SELECT 1 FROM Customer WHERE Customer.phone='$phone'");
-					if (mysql_fetch_row($result)) {
-						$stmt=null;
-						$qry ="INSERT INTO dba.Customer(name, phone) VALUES (?,?);";
-						$stmt= $mysql->prepare($qry);
-						// add customer to the database if one with the given number does not exist already
-						if ($stmt){
-							$stmt->execute(array(	$vArgs["name"], $vArgs["phone"] ));
-							echo '<table width="90%" style="margin: auto;">
-								<tr><td>
-									<table cellspacing="0" cellpadding="0" valign="top" class="dbaserver" style="width:900px;margin: auto;" >
-										<tr class="dbaserver"><th class="month" class="dbaserver" colspan = "2">New Customer Insertion OK.</th></tr>
-									</table>
-								</td></tr>
-								<tr><td>&nbsp;</td></tr>
-							</table>	
-							'; 
-						}
-					}else{
-							echo '<table width="90%" style="margin: auto;">
-								<tr><td>
-									<table cellspacing="0" cellpadding="0" valign="top" class="dbaserver" style="width:900px;margin: auto;" >
-										<tr class="dbaserver"><th class="month" class="dbaserver" colspan = "2">Returning Customer.</th></tr>
-									</table>
-								</td></tr>
-								<tr><td>&nbsp;</td></tr>
-							</table>	
-							'; 
+					$stmt=null;
+					$qry ="INSERT INTO dba.Customer(name, phone) VALUES (?,?);";
+					$stmt= $mysql->prepare($qry);
+					// add customer to the database if one with the given number does not exist already
+					if ($stmt){
+						$stmt->execute(array(	$vArgs["name"], $vArgs["phone"] ));
 					}
-*/
+
 					// add the reservation to the db
 					$stmt=null;
 					$qry ="INSERT INTO dba.Reservation(reservationDateTime, reservationId, phone, address, tableNumber, arrivalTime) VALUES (?,?,?,?,?,NULL);";
@@ -317,11 +294,11 @@ switch ($OPTION_ID) {
 				try{
 					$stmt=null;
 					$incr = (floatval($vArgs["percent"])/100) + 1;
-					$qry ="UPDATE dba.MenuItem SET price=(?*'$incr') WHERE price<?;";
+					$qry ="UPDATE dba.MenuItem SET price=(price*'$incr') WHERE price<?;";
 					$stmt= $mysql->prepare($qry);
 
 					if ($stmt){	 
-						$stmt->execute(array( $vArgs["percent"], $vArgs["price"] ) ) ;
+						$stmt->execute(array( $vArgs["price"] ) ) ;
 						echo '
 						    <table width="90%" style="margin: auto;">
 								<tr><td>

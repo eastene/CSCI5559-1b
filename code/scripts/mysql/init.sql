@@ -97,7 +97,9 @@ CREATE TABLE Reservation (
 
 	PRIMARY KEY (reservationId),
 	FOREIGN KEY (phone)
-		REFERENCES Customer(phone),
+		REFERENCES Customer(phone)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION,
 	FOREIGN KEY (address, tableNumber)
 		REFERENCES DinnerTable(address, tableNumber)
 );
@@ -106,7 +108,7 @@ CREATE TABLE Terminal (
 	brand VARCHAR(128),
 	model VARCHAR(128),
 	serialNo VARCHAR(128),
-	lastInvoideNo INTEGER,
+	lastInvoiceNo INTEGER,
 
 	PRIMARY KEY (brand, model, serialNo)
 );

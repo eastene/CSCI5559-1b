@@ -738,41 +738,47 @@ case 11:  /*Query 11: A9.*/
 
 		try { /*Protect execution errors capturing exceptions.*/
 			//Query to run
-			$queryText = "SELECT name, phone, spent, '20' AS gift
-				FROM dba.Customer C
-				WHERE 4 < (SELECT COUNT(phone)
+			$queryText = "SELECT name, C.phone, spent, '20' AS gift
+				FROM dba.Customer C, (SELECT Ct.phone, SUM(price) as spent
+					FROM dba.MenuItem MI, dba.Items, dba.Invoice I, dba.Customer Ct
+					WHERE I.customerPhone = Ct.phone
+					AND Items.invNumber = I.invNumber
+					AND Items.code = MI.code
+					GROUP BY Ct.phone) AS temp
+				WHERE 4 < (SELECT COUNT(R.phone)
 					FROM dba.Reservation R
 					WHERE R.address = '1380 Lawrence St'
 					AND R.reservationDateTime > DATE_ADD(NOW(), INTERVAL -6 MONTH))
-				AND 300 > (SELECT SUM(price) as spent
-					FROM dba.MenuItems MI, dba.Items, dba.Invoice I
-					WHERE I.customerPhone = phone
-					AND Items.invNumber = I.invNumber
-					AND Items.code = MI.code)
+				AND C.phone = temp.phone
+				AND 300 > temp.spent
 				UNION
-				SELECT name, phone, spent, '50' AS gift
-				FROM dba.Customer C
-				WHERE 4 < (SELECT COUNT(phone)
+				SELECT name, C.phone, spent, '50' AS gift
+				FROM dba.Customer C, (SELECT Ct.phone, SUM(price) as spent
+					FROM dba.MenuItem MI, dba.Items, dba.Invoice I, dba.Customer Ct
+					WHERE I.customerPhone = Ct.phone
+					AND Items.invNumber = I.invNumber
+					AND Items.code = MI.code
+					GROUP BY Ct.phone) AS temp
+				WHERE 4 < (SELECT COUNT(R.phone)
 					FROM dba.Reservation R
 					WHERE R.address = '1380 Lawrence St'
 					AND R.reservationDateTime > DATE_ADD(NOW(), INTERVAL -6 MONTH))
-				AND 500 > (SELECT SUM(price) as spent
-					FROM dba.MenuItems MI, dba.Items, dba.Invoice I
-					WHERE I.customerPhone = phone
-					AND Items.invNumber = I.invNumber
-					AND Items.code = MI.code)
+				AND C.phone = temp.phone
+				AND 500 > temp.spent
 				UNION
-				SELECT name, phone, spent, '100' AS gift
-				FROM dba.Customer C
-				WHERE 4 < (SELECT COUNT(phone)
+				SELECT name, C.phone, spent, '100' AS gift
+				FROM dba.Customer C, (SELECT Ct.phone, SUM(price) as spent
+					FROM dba.MenuItem MI, dba.Items, dba.Invoice I, dba.Customer Ct
+					WHERE I.customerPhone = Ct.phone
+					AND Items.invNumber = I.invNumber
+					AND Items.code = MI.code
+					GROUP BY Ct.phone) AS temp
+				WHERE 4 < (SELECT COUNT(R.phone)
 					FROM dba.Reservation R
 					WHERE R.address = '1380 Lawrence St'
 					AND R.reservationDateTime > DATE_ADD(NOW(), INTERVAL -6 MONTH))
-				AND 500 < (SELECT SUM(price) as spent
-					FROM dba.MenuItems MI, dba.Items, dba.Invoice I
-					WHERE I.customerPhone = phone
-					AND Items.invNumber = I.invNumber
-					AND Items.code = MI.code);";
+				AND C.phone = temp.phone
+				AND 500 < temp.spent;";
 				
 			//Prepare the query. 
 			$resultSet = $mysql->prepare($queryText);  
@@ -785,7 +791,10 @@ case 11:  /*Query 11: A9.*/
 			
 			echo '<thead>' ;														//HTML Header - Columns headers
 			echo 	'<tr class="bckMngr">';
-			echo 	'<th class="bckMngr" style="width:150px;">Balance</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Name</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Phone</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Amount Spent</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Gift Amount</th>';
 			echo '</thead>';
 
 
@@ -793,7 +802,10 @@ case 11:  /*Query 11: A9.*/
 			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
 				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
 				echo '<tr '.$tr_class.'>';
-					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['diff'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['name'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['phone'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['spent'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['gift'].'</td>';
 				echo '</tr>';
 			}
 			echo "</tbody>";
@@ -817,9 +829,10 @@ case 11:  /*Query 11: A9.*/
 
 		try { /*Protect execution errors capturing exceptions.*/
 			//Query to run
-			$queryText = "SELECT waiter, tableNumber, reservationId, reservationDateTime, name, phone
-				FROM dba.DinnerTable DT, dba.Reservation R, dba.Customer C
-				";
+			$queryText = "SELECT E.name AS waiter, DT.tableNumber, reservationId, reservationDateTime, C.name, C.phone
+				FROM dba.Employee E, dba.DinnerTable DT, dba.Reservation R, dba.Customer C
+				WHERE E.empId = DT.waiter
+				AND C.phone = R.phone;";
 				
 			//Prepare the query. 
 			$resultSet = $mysql->prepare($queryText);  
@@ -832,7 +845,12 @@ case 11:  /*Query 11: A9.*/
 			
 			echo '<thead>' ;														//HTML Header - Columns headers
 			echo 	'<tr class="bckMngr">';
-			echo 	'<th class="bckMngr" style="width:150px;">Balance</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Waiter</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Table</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Reservation ID</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Reservation Time</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Name</th>';
+			echo 	'<th class="bckMngr" style="width:150px;">Phone</th>';
 			echo '</thead>';
 
 
@@ -840,7 +858,12 @@ case 11:  /*Query 11: A9.*/
 			while($row  = $resultSet->fetch(PDO::FETCH_ASSOC)){
 				if ($tr_id == 0){$tr_class='class="bckMngrtrEven"'; $tr_id=1;} 		else {$tr_class='class="bckMngrtrOdd"' ; $tr_id=0;}
 				echo '<tr '.$tr_class.'>';
-					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['diff'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['waiter'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['tableNumber'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['reservationId'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['reservationDateTime'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['name'].'</td>';
+					echo '<td class="bckMngr" style="text-align:left;width:150px;">'.$row['phone'].'</td>';
 				echo '</tr>';
 			}
 			echo "</tbody>";
